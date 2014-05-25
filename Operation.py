@@ -25,7 +25,7 @@ import sys
 import numpy
 import zoo
 import urllib
-import correlation
+import correlate
 
 def Operation(conf,inputs,outputs):
         urls = inputs["urls"]["value"].split(',')
@@ -53,7 +53,7 @@ def Operation(conf,inputs,outputs):
                 return zoo.SERVICE_FAILED
 
         if inputs["selection"]["value"] == "Coorelate":
-                result = correlation.correlation(dataset1D, dataset3D, output)
+                result = correlate.correlation(dataset1D, dataset3D, output)
 
         dataset1D.close()
         dataset3D.close()
