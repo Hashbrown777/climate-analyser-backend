@@ -1,7 +1,7 @@
 #
-# Zoo Adapter for Operations
+# Zoo Adapter for Correlate
 # Author:		Robert Sinn
-# Last modified: 20th April 2014
+# Last modified: 13 May 2014
 #
 # This file is part of Climate Analyser.
 #
@@ -20,76 +20,70 @@
 # If not, see <http://www.gnu.org/licenses/>.
 #
 
-from netCDF4 import Dataset
 import sys
-import numpy
 import zoo
 import requests
 import correlation
+import regresion
 import os.path
+import os
 
 def getFileNameFromUrl(url):
-        return url.rsplit('/',1)
+	return url.rsplit('/',1)
 
 def getLocation(url):
-        return "Thredds/sample/" + getFileNameFromUrl(url)[1]
+	return "Thredds/inputs/" + getFileNameFromUrl(url)[1]
 
 def readFileExistsInThredds(name):
-        return os.path.isfile(name)
+	return os.path.isfile(name)
 
 def downloadFile(url):
-        filePath = getLocation(url)
-        r = requests.get(url)
-        f = open(filePath, 'wb')
-        for chunk in r.iter_content(chunk_size=512 * 1024):
-                if chunk: # filter out keep-alive new chunks
-                        f.write(chunk)
-        f.close()
-        return
+	filePath = getLocation(url)
+	r = requests.get(url)
+	f = open(filePath, 'wb')
+	for chunk in r.iter_content(chunk_size=512 * 1024): 
+		if chunk: # filter out keep-alive new chunks
+			f.write(chunk)
+	f.close()
+	return 
 
-def outputFileName(operation,url1,url2):
-        name = str(operation) + '_' + getFileNameFromUrl(url1)[1].strip('.nc')
-        name += '_' + getFileNameFromUrl(url2)[1].strip('.nc') + '.nc'
-        return name
+def outputFileName(operation,urls):
+	name = str(operation)
+	for url in urls:
+		name += '_' + getFileNameFromUrl(url)[1].strip('.nc')
+	name += '.nc'
+	return name
+
+def filecheck(urls):
+	for url in urls:
+		if readFileExistsInThredds(getLocation(url)) == 0:
+			downloadFile(url)
 
 def Operation(conf,inputs,outputs):
-        urls = inputs["urls"]["value"].split(',')
-        outputFile = "Thredds/sample/" + outputFileName(inputs["selection"]["value"],urls[0],urls[1])
-        if len(urls) < 2:
-                        conf["lenv"]["message"] = "There has to be atleast two datasets"
-                        return zoo.SERVICE_FAILED
-        try:
-                if readFileExistsInThredds(outputFile):
-                        os.remove(outputFile)
-                output = Dataset(outputFile, 'w', format='NETCDF4')
-        except:
-                conf["lenv"]["message"] = "Could not open '" + outputFile + "' for writing."
-                return zoo.SERVICE_FAILED
-        try:
-                #dataset1D = Dataset(urls[0], 'r', format='NETCDF4')
-                if readFileExistsInThredds(getLocation(urls[0])) == 0:
-                        downloadFile(urls[0])
-                dataset1D = Dataset(getLocation(urls[0]), 'r', format='NETCDF4')
-        except:
-                conf["lenv"]["message"] = "Could not open '" + urls[0] + "' for reading."
-                return zoo.SERVICE_FAILED
-        try:
-                #dataset3D = Dataset(urls[1], 'r', format='NETCDF4')
-                if readFileExistsInThredds(getLocation(urls[1])) == 0:
-                        downloadFile(urls[1])
-                dataset3D = Dataset(getLocation(urls[1]), 'r', format='NETCDF4')
-        except:
-                conf["lenv"]["message"] = "Could not open '" + urls[1] + "' for reading."
-                return zoo.SERVICE_FAILED
+	urls = inputs["urls"]["value"].split(',')
+	filename = outputFileName(inputs["selection"]["value"],urls)
+	outputFile = "Thredds/outputs/" + filename
+	if len(urls) < 1:
+			conf["lenv"]["message"] = "There has to be atleast one datasets"
+			return zoo.SERVICE_FAILED
+	try:
+		if readFileExistsInThredds(outputFile):
+			os.remove(outputFile)
+	except:
+		conf["lenv"]["message"] = "Could not open '" + outputFile + "' for writing."
+		return zoo.SERVICE_FAILED
+       
+	filecheck(urls)
 
-        if inputs["selection"]["value"] == "correlate":
-                result = correlation.correlation(dataset1D, dataset3D, output)
+	if inputs["selection"]["value"] == "correlate":
+		result = correlation.runCorrelate(getLocation(urls[0]),
+				getLocation(urls[1]), outputFile)
+	if inputs["selection"]["value"] == "regres":
+		regresion.runRegres(getLocation(urls[0]),outputFile)
+	
+	#outputs["Result"]["value"]="http://130.56.248.143/" + outputFile
+	outputs["Result"]["value"]=(
+		"http://115.146.84.143:8080/thredds/catalog/datafiles/outputs/catalog.html" +
+			"?dataset=climateAnalyserStorage/outputs/" + filename)
 
-        dataset1D.close()
-        dataset3D.close()
-        output.close()
-        outputs["Result"]["value"]="http://130.56.248.143/" + outputFile
-
-        return zoo.SERVICE_SUCCEEDED
-                                                                                                                                              90,2-9        Bot
-
+	return zoo.SERVICE_SUCCEEDED
