@@ -7,7 +7,7 @@ fi
 
 RUNASUSER="sudo -u $SUDO_USER"
 
-yum -y install tar bzip2 gcc gcc-c++ autoconf bison flex
+yum -y install tar bzip2 gcc gcc-c++ autoconf bison flex patch
 yum -y install gdal-devel libxml2-devel python-devel libcurl-devel openssl-devel
 
 $RUNASUSER bash <<EOS
