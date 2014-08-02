@@ -32,7 +32,7 @@ def getFileNameFromUrl(url):
 	return url.rsplit('/',1)
 
 def getLocation(url):
-	return "Thredds/inputs/" + getFileNameFromUrl(url)[1]
+	return "/var/www/cgi-bin/Thredds/inputs/" + getFileNameFromUrl(url)[1]
 
 def readFileExistsInThredds(name):
 	return os.path.isfile(name)
@@ -59,16 +59,30 @@ def filecheck(urls):
 		if readFileExistsInThredds(getLocation(url)) == 0:
 			downloadFile(url)
 
+def resultOut(filename):
+	outputLink = "<opendap>"
+	outputLink += ("http://115.146.84.143:8080/thredds/catalog/datafiles/outputs/catalog.html?dataset=climateAnalyserStorage/outputs/" + filename)
+	outputLink += "</opendap>"
+	outputLink += "<ncfile>"
+	outputLink += ("http://115.146.84.143:8080/thredds/fileServer/datafiles/outputs/" 		+ filename)
+	outputLink += "</ncfile>"
+	outputLink += "<wms>"
+	outputLink += ("http://115.146.84.143:8080/thredds/wms/datafiles/outputs/"               + filename + "?service=WMS&version=1.3.0&request=GetCapabilities")
+	outputLink += "</wms>"
+	return outputLink
+
 def Operation(conf,inputs,outputs):
 	urls = inputs["urls"]["value"].split(',')
 	filename = outputFileName(inputs["selection"]["value"],urls)
-	outputFile = "Thredds/outputs/" + filename
+	outputFile = "/var/www/cgi-bin/Thredds/outputs/" + filename
 	if len(urls) < 1:
 			conf["lenv"]["message"] = "There has to be atleast one datasets"
 			return zoo.SERVICE_FAILED
 	try:
 		if readFileExistsInThredds(outputFile):
-			os.remove(outputFile)
+		        outputs["Result"]["value"]=(resultOut(filename))
+		        return zoo.SERVICE_SUCCEEDED
+			#os.remove(outputFile)
 	except:
 		conf["lenv"]["message"] = "Could not open '" + outputFile + "' for writing."
 		return zoo.SERVICE_FAILED
@@ -81,9 +95,6 @@ def Operation(conf,inputs,outputs):
 	if inputs["selection"]["value"] == "regres":
 		regresion.runRegres(getLocation(urls[0]),outputFile)
 	
-	#outputs["Result"]["value"]="http://130.56.248.143/" + outputFile
-	outputs["Result"]["value"]=(
-		"http://115.146.84.143:8080/thredds/catalog/datafiles/outputs/catalog.html" +
-			"?dataset=climateAnalyserStorage/outputs/" + filename)
+        outputs["Result"]["value"]=(resultOut(filename))
 
 	return zoo.SERVICE_SUCCEEDED
