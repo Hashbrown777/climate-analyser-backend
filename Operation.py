@@ -60,15 +60,15 @@ def filecheck(urls):
 			downloadFile(url)
 
 def resultOut(filename):
-	outputLink = "<opendap>"
+	outputLink = "[opendap]"
 	outputLink += ("http://115.146.84.143:8080/thredds/catalog/datafiles/outputs/catalog.html?dataset=climateAnalyserStorage/outputs/" + filename)
-	outputLink += "</opendap>"
-	outputLink += "<ncfile>"
+	outputLink += "[/opendap]"
+	outputLink += "[ncfile]"
 	outputLink += ("http://115.146.84.143:8080/thredds/fileServer/datafiles/outputs/" 		+ filename)
-	outputLink += "</ncfile>"
-	outputLink += "<wms>"
+	outputLink += "[/ncfile]"
+	outputLink += "[wms]"
 	outputLink += ("http://115.146.84.143:8080/thredds/wms/datafiles/outputs/"               + filename + "?service=WMS&version=1.3.0&request=GetCapabilities")
-	outputLink += "</wms>"
+	outputLink += "[/wms]"
 	return outputLink
 
 def Operation(conf,inputs,outputs):
@@ -93,7 +93,7 @@ def Operation(conf,inputs,outputs):
 		result = correlation.runCorrelate(getLocation(urls[0]),
 				getLocation(urls[1]), outputFile)
 	if inputs["selection"]["value"] == "regres":
-		regresion.runRegres(getLocation(urls[0]),outputFile)
+		regresion.runRegres(urls[0],outputFile)
 	
         outputs["Result"]["value"]=(resultOut(filename))
 
