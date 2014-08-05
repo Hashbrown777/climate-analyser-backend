@@ -29,17 +29,20 @@ import os.path
 import os
 
 def getFileNameFromUrl(url):
-	return url.rsplit('/',1)
+	return url.rsplit('/',1)[1].split('?',1)[0]
+
+def getDownloadLocation(url):
+	return "/var/www/cgi-bin/Thredds/inputs/" + getFileNameFromUrl(url)
 
 def getLocation(url,serverAddr):
 	if localFile(url):
-		return dataLink(serverAddr,getFileNameFromUrl(url)[1])	
+		return dataLink(serverAddr,getFileNameFromUrl(url),getVariables(url))	
 	else:
 		return url
-	#return "/var/www/cgi-bin/Thredds/inputs/" + getFileNameFromUrl(url)[1]
+	#return "/var/www/cgi-bin/Thredds/inputs/" + getFileNameFromUrl(url)
 
-def getDownloadLocation(url):
-	return "/var/www/cgi-bin/Thredds/inputs/" + getFileNameFromUrl(url)[1]
+def getVariables(url):
+	return "?" + url.rsplit('/',1)[1].split('?',1)[1]
 
 def dataLink(serverAddr,filename):
 	return (serverAddr + "/thredds/dodsC/datafiles/inputs/" + filename)
@@ -47,7 +50,7 @@ def dataLink(serverAddr,filename):
 def outputFileName(operation,urls):
 	name = str(operation)
 	for url in urls:
-		name += '_' + getFileNameFromUrl(url)[1].strip('.nc')
+		name += '_' + getFileNameFromUrl(url).strip('.nc')
 	name += '.nc'
 	return name
   
@@ -98,9 +101,9 @@ def Operation(conf,inputs,outputs):
 			return zoo.SERVICE_FAILED
 	try:
 		if readFileExistsInThredds(outputFile):
-		        outputs["Result"]["value"]=(resultOut(filename))
-		        return zoo.SERVICE_SUCCEEDED
-			#os.remove(outputFile)
+		        #outputs["Result"]["value"]=(resultOut(filename))
+		        #return zoo.SERVICE_SUCCEEDED
+			os.remove(outputFile)
 	except:
 		conf["lenv"]["message"] = "Could not open '" + outputFile + "' for writing."
 		return zoo.SERVICE_FAILED
