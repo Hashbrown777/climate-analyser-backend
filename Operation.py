@@ -31,8 +31,12 @@ import os
 def getFileNameFromUrl(url):
 	return url.rsplit('/',1)
 
-def getLocation(url):
-	return "/var/www/cgi-bin/Thredds/inputs/" + getFileNameFromUrl(url)[1]
+def getLocation(url,serverAddr):
+	if local(url):
+		return dataLink(serverAddr,filename)	
+	else:
+		return url
+	#return "/var/www/cgi-bin/Thredds/inputs/" + getFileNameFromUrl(url)[1]
 
 def readFileExistsInThredds(name):
 	return os.path.isfile(name)
@@ -57,17 +61,27 @@ def outputFileName(operation,urls):
 def filecheck(urls):
 	for url in urls:
 		if readFileExistsInThredds(getLocation(url)) == 0:
-			downloadFile(url)
+			if localFile(url):
+				downloadFile(url)
 
-def resultOut(filename):
+def localFile(url):
+	if not "/dodsc/" in url:
+		return 1
+	else:
+		return 0
+
+def dataLink(serverAddr,filename):
+	return (serverAddr + "/thredds/fileServer/datafiles/outputs/" + filename)
+
+def resultOut(filename,serverAddr):
 	outputLink = "[opendap]"
-	outputLink += ("http://115.146.84.143:8080/thredds/catalog/datafiles/outputs/catalog.html?dataset=climateAnalyserStorage/outputs/" + filename)
+	outputLink += (serverAddr+ "/thredds/catalog/datafiles/outputs/catalog.html?dataset=climateAnalyserStorage/outputs/" + filename)
 	outputLink += "[/opendap]"
 	outputLink += "[ncfile]"
-	outputLink += ("http://115.146.84.143:8080/thredds/fileServer/datafiles/outputs/" 		+ filename)
+	outputLink += dataLink(serverAddr,filename)
 	outputLink += "[/ncfile]"
 	outputLink += "[wms]"
-	outputLink += ("http://115.146.84.143:8080/thredds/wms/datafiles/outputs/"               + filename + "?service=WMS&version=1.3.0&request=GetCapabilities")
+	outputLink += (serverAddr + "/thredds/wms/datafiles/outputs/" + filename + "?service=WMS&version=1.3.0&request=GetCapabilities")
 	outputLink += "[/wms]"
 	return outputLink
 
@@ -75,6 +89,7 @@ def Operation(conf,inputs,outputs):
 	urls = inputs["urls"]["value"].split(',')
 	filename = outputFileName(inputs["selection"]["value"],urls)
 	outputFile = "/var/www/cgi-bin/Thredds/outputs/" + filename
+	serverAddr = "http://115.146.84.143:8080"
 	if len(urls) < 1:
 			conf["lenv"]["message"] = "There has to be atleast one datasets"
 			return zoo.SERVICE_FAILED
@@ -90,11 +105,11 @@ def Operation(conf,inputs,outputs):
 	filecheck(urls)
 
 	if inputs["selection"]["value"] == "correlate":
-		result = correlation.runCorrelate(getLocation(urls[0]),
-				getLocation(urls[1]), outputFile)
+		result = correlation.runCorrelate(getLocation(urls[0],serverAddr),
+				getLocation(urls[1],serverAddr), outputFile)
 	if inputs["selection"]["value"] == "regres":
 		regresion.runRegres(urls[0],outputFile)
 	
-        outputs["Result"]["value"]=(resultOut(filename))
+        outputs["Result"]["value"]=(resultOut(filename,serverAddr))
 
 	return zoo.SERVICE_SUCCEEDED
