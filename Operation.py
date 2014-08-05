@@ -32,17 +32,42 @@ def getFileNameFromUrl(url):
 	return url.rsplit('/',1)
 
 def getLocation(url,serverAddr):
-	if local(url):
-		return dataLink(serverAddr,filename)	
+	if localFile(url):
+		return dataLink(serverAddr,getFileNameFromUrl(url)[1])	
 	else:
 		return url
 	#return "/var/www/cgi-bin/Thredds/inputs/" + getFileNameFromUrl(url)[1]
 
+def getDownloadLocation(url):
+	return "/var/www/cgi-bin/Thredds/inputs/" + getFileNameFromUrl(url)[1]
+
+def dataLink(serverAddr,filename):
+	return (serverAddr + "/thredds/dodsC/datafiles/inputs/" + filename)
+
+def outputFileName(operation,urls):
+	name = str(operation)
+	for url in urls:
+		name += '_' + getFileNameFromUrl(url)[1].strip('.nc')
+	name += '.nc'
+	return name
+  
 def readFileExistsInThredds(name):
 	return os.path.isfile(name)
 
+def filecheck(urls):
+	for url in urls:
+		if readFileExistsInThredds(getDownloadLocation(url)) == 0:
+			if localFile(url):
+				downloadFile(url)
+
+def localFile(url):
+	if not "/dodsC/" in url:
+		return 1
+	else:
+		return 0
+
 def downloadFile(url):
-	filePath = getLocation(url)
+	filePath = getDownloadLocation(url)
 	r = requests.get(url)
 	f = open(filePath, 'wb')
 	for chunk in r.iter_content(chunk_size=512 * 1024): 
@@ -51,34 +76,12 @@ def downloadFile(url):
 	f.close()
 	return 
 
-def outputFileName(operation,urls):
-	name = str(operation)
-	for url in urls:
-		name += '_' + getFileNameFromUrl(url)[1].strip('.nc')
-	name += '.nc'
-	return name
-
-def filecheck(urls):
-	for url in urls:
-		if readFileExistsInThredds(getLocation(url)) == 0:
-			if localFile(url):
-				downloadFile(url)
-
-def localFile(url):
-	if not "/dodsc/" in url:
-		return 1
-	else:
-		return 0
-
-def dataLink(serverAddr,filename):
-	return (serverAddr + "/thredds/fileServer/datafiles/outputs/" + filename)
-
 def resultOut(filename,serverAddr):
 	outputLink = "[opendap]"
-	outputLink += (serverAddr+ "/thredds/catalog/datafiles/outputs/catalog.html?dataset=climateAnalyserStorage/outputs/" + filename)
+	outputLink += (serverAddr + "/thredds/catalog/datafiles/outputs/catalog.html?dataset=climateAnalyserStorage/outputs/" + filename)
 	outputLink += "[/opendap]"
 	outputLink += "[ncfile]"
-	outputLink += dataLink(serverAddr,filename)
+	outputLink += (serverAddr + "/thredds/fileServer/datafiles/outputs/" + filename)
 	outputLink += "[/ncfile]"
 	outputLink += "[wms]"
 	outputLink += (serverAddr + "/thredds/wms/datafiles/outputs/" + filename + "?service=WMS&version=1.3.0&request=GetCapabilities")
@@ -91,7 +94,7 @@ def Operation(conf,inputs,outputs):
 	outputFile = "/var/www/cgi-bin/Thredds/outputs/" + filename
 	serverAddr = "http://115.146.84.143:8080"
 	if len(urls) < 1:
-			conf["lenv"]["message"] = "There has to be atleast one datasets"
+			conf["lenv"]["message"] = "There has to be atleast one dataset"
 			return zoo.SERVICE_FAILED
 	try:
 		if readFileExistsInThredds(outputFile):
@@ -108,7 +111,7 @@ def Operation(conf,inputs,outputs):
 		result = correlation.runCorrelate(getLocation(urls[0],serverAddr),
 				getLocation(urls[1],serverAddr), outputFile)
 	if inputs["selection"]["value"] == "regres":
-		regresion.runRegres(urls[0],outputFile)
+		regresion.runRegres(getLocation(urls[0],serverAddr),outputFile)
 	
         outputs["Result"]["value"]=(resultOut(filename,serverAddr))
 
