@@ -29,7 +29,7 @@ import os.path
 import os
 
 def getFileNameFromUrl(url):
-	return url.rsplit('/',1)[1].split('?',1)[0]
+		return url.rsplit('/',1)[1].split('?',1)[0]
 
 def getDownloadLocation(url):
 	return "/var/www/cgi-bin/Thredds/inputs/" + getFileNameFromUrl(url)
@@ -42,10 +42,13 @@ def getLocation(url,serverAddr):
 	#return "/var/www/cgi-bin/Thredds/inputs/" + getFileNameFromUrl(url)
 
 def getVariables(url):
-	return "?" + url.rsplit('/',1)[1].split('?',1)[1]
+	if "?" in url:
+		return "?" + url.rsplit('/',1)[1].split('?',1)[1]
+	else:
+		return ""
 
-def dataLink(serverAddr,filename):
-	return (serverAddr + "/thredds/dodsC/datafiles/inputs/" + filename)
+def dataLink(serverAddr,filename,variables):
+	return (serverAddr + "/thredds/dodsC/datafiles/inputs/" + filename + variables)
 
 def outputFileName(operation,urls):
 	name = str(operation)
