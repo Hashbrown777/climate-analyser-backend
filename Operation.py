@@ -54,9 +54,16 @@ def outputFileName(operation,urls):
 	name = str(operation)
 	for url in urls:
 		name += '_' + getFileNameFromUrl(url).strip('.nc')
+	if any('?' in url for url in urls):
+		name += ('-V' + id_generator())
+		if readFileExistsInThredds("/var/www/cgi-bin/Thredds/outputs/"+name+'.nc'):
+			return outputFileName
 	name += '.nc'
 	return name
   
+def id_generator(outputName,chars=string.ascii_uppercase + string.digits):
+	name = outputName.join(random.choice(chars) for _ in range(5))
+
 def readFileExistsInThredds(name):
 	return os.path.isfile(name)
 
@@ -94,8 +101,15 @@ def resultOut(filename,serverAddr):
 	outputLink += "[/wms]"
 	return outputLink
 
+def getUrls(inputUrls):
+	urls = inputUrls.split(",http")
+	for url in urls:
+		if "http" not in url:
+			url = "http" + url
+	return urls
+
 def Operation(conf,inputs,outputs):
-	urls = inputs["urls"]["value"].split(',')
+	urls = getUrls(inputs["urls"]["value"])
 	filename = outputFileName(inputs["selection"]["value"],urls)
 	outputFile = "/var/www/cgi-bin/Thredds/outputs/" + filename
 	serverAddr = "http://115.146.84.143:8080"
@@ -104,9 +118,9 @@ def Operation(conf,inputs,outputs):
 			return zoo.SERVICE_FAILED
 	try:
 		if readFileExistsInThredds(outputFile):
-		        #outputs["Result"]["value"]=(resultOut(filename))
-		        #return zoo.SERVICE_SUCCEEDED
-			os.remove(outputFile)
+		        outputs["Result"]["value"]=(resultOut(filename))
+		        return zoo.SERVICE_SUCCEEDED
+			#os.remove(outputFile)
 	except:
 		conf["lenv"]["message"] = "Could not open '" + outputFile + "' for writing."
 		return zoo.SERVICE_FAILED
