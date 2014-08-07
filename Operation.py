@@ -27,6 +27,8 @@ import correlation
 import regresion
 import os.path
 import os
+import string
+import random
 
 def getFileNameFromUrl(url):
 		return url.rsplit('/',1)[1].split('?',1)[0]
@@ -38,6 +40,8 @@ def getLocation(url,serverAddr):
 	if localFile(url):
 		return dataLink(serverAddr,getFileNameFromUrl(url),getVariables(url))	
 	else:
+		if "http" not in url:
+			url = "http" + url
 		return url
 	#return "/var/www/cgi-bin/Thredds/inputs/" + getFileNameFromUrl(url)
 
@@ -55,14 +59,15 @@ def outputFileName(operation,urls):
 	for url in urls:
 		name += '_' + getFileNameFromUrl(url).strip('.nc')
 	if any('?' in url for url in urls):
-		name += ('-V' + id_generator())
+		name += ("-V" + str(id_generator()))
 		if readFileExistsInThredds("/var/www/cgi-bin/Thredds/outputs/"+name+'.nc'):
 			return outputFileName
 	name += '.nc'
 	return name
   
-def id_generator(outputName,chars=string.ascii_uppercase + string.digits):
-	name = outputName.join(random.choice(chars) for _ in range(5))
+def id_generator(chars=string.ascii_uppercase + string.digits):
+	name = ''.join(random.choice(chars) for _ in range(5))
+	return name
 
 def readFileExistsInThredds(name):
 	return os.path.isfile(name)
@@ -103,9 +108,6 @@ def resultOut(filename,serverAddr):
 
 def getUrls(inputUrls):
 	urls = inputUrls.split(",http")
-	for url in urls:
-		if "http" not in url:
-			url = "http" + url
 	return urls
 
 def Operation(conf,inputs,outputs):
@@ -118,7 +120,7 @@ def Operation(conf,inputs,outputs):
 			return zoo.SERVICE_FAILED
 	try:
 		if readFileExistsInThredds(outputFile):
-		        outputs["Result"]["value"]=(resultOut(filename))
+		        outputs["Result"]["value"]=(resultOut(filename,serverAddr))
 		        return zoo.SERVICE_SUCCEEDED
 			#os.remove(outputFile)
 	except:
