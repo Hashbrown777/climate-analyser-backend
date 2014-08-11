@@ -59,4 +59,14 @@ $RUNASUSER bash <<EOS
 autoconf
 ./configure --with-python
 make
+make zoo_loader.cgi
 EOS
+
+mkdir -p /var/www/cgi-bin
+cp main.cfg /var/www/cgi-bin/
+cp zoo_loader.cgi /var/www/cgi-bin/
+
+cd ../../..
+ln -s /var/www/cgi-bin cgi-bin
+
+cp Operation.{zcfg,py} cgi-bin
