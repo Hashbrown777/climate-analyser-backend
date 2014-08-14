@@ -7,7 +7,7 @@ fi
 
 RUNASUSER="sudo -u $SUDO_USER"
 
-yum -y install tar bzip2 gcc gcc-c++ autoconf bison flex patch
+yum -y install tar bzip2 gcc gcc-c++ autoconf bison flex patch httpd
 yum -y install gdal-devel libxml2-devel python-devel libcurl-devel openssl-devel
 
 $RUNASUSER bash <<EOS
@@ -63,10 +63,14 @@ make zoo_loader.cgi
 EOS
 
 mkdir -p /var/www/cgi-bin
+rm -rf $PWD/cgi-bin
 cp main.cfg /var/www/cgi-bin/
 cp zoo_loader.cgi /var/www/cgi-bin/
 
 cd ../../..
-ln -s /var/www/cgi-bin cgi-bin
+ln -s /var/www/cgi-bin $PWD/cgi-bin
 
 cp Operation.{zcfg,py} cgi-bin
+
+rm -f /etc/httpd/conf/httpd.conf
+ln -s $PWD/httpd.conf /etc/httpd/conf/httpd.conf
