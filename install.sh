@@ -7,10 +7,12 @@ fi
 
 RUNASUSER="sudo -u $SUDO_USER"
 
-yum -y install tar bzip2 gcc gcc-c++ autoconf bison flex patch httpd
-yum -y install gdal-devel libxml2-devel python-devel libcurl-devel openssl-devel
+yum -y install tar bzip2 gcc gcc-c++ autoconf bison flex patch httpd git python-pip
+yum -y install gdal-devel libxml2-devel python-devel libcurl-devel openssl-devel netcdf4-python netcdf-devel
 
 $RUNASUSER bash <<EOS
+git clone https://github.com/climate-analyser-team/operators.git
+
 curl http://www.zoo-project.org/dl/zoo-project-1.3.0.tar.bz2 -o zoo-project-1.3.0.tar.bz2
 tar -xjf zoo-project-1.3.0.tar.bz2
 rm zoo-project-1.3.0.tar.bz2
@@ -62,6 +64,7 @@ make
 make zoo_loader.cgi
 EOS
 
+rm -rf /var/www/cgi-bin
 mkdir -p /var/www/cgi-bin
 rm -rf $PWD/cgi-bin
 cp main.cfg /var/www/cgi-bin/
@@ -74,3 +77,23 @@ cp Operation.{zcfg,py} cgi-bin
 
 rm -f /etc/httpd/conf/httpd.conf
 ln -s $PWD/httpd.conf /etc/httpd/conf/httpd.conf
+
+cp operators/* cgi-bin/
+
+$RUNASUSER bash <<EOS
+wget https://code.zmaw.de/attachments/download/8557/cdo-current.tar.gz
+tar -xzf cdo-current.tar.gz
+EOS
+
+cd $(ls -d cdo*/)
+
+$RUNASUSER bash <<EOS
+./configure --with-netcdf=yes --with-hdf5=yes
+make
+EOS
+make install
+cd ..
+
+pip install cdo
+
+rm -rf cdo-* fcgi* zoo-project*
