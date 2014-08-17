@@ -114,7 +114,8 @@ def Operation(conf,inputs,outputs):
 	urls = getUrls(inputs["urls"]["value"])
 	filename = outputFileName(inputs["selection"]["value"],urls)
 	outputFile = "/var/www/cgi-bin/Thredds/outputs/" + filename
-	serverAddr = "http://115.146.84.143:8080"
+	serverFile = open('ThreddServer')
+	serverAddr = serverFile.read().strip()
 	if len(urls) < 1:
 			conf["lenv"]["message"] = "There has to be atleast one dataset"
 			return zoo.SERVICE_FAILED
