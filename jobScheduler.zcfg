@@ -1,0 +1,82 @@
+[jobScheduler]
+ Title = Schedule an operation.
+ Abstract = Schedule calculation of 1d/3d data.
+ processVersion = 2
+ storeSupported = true
+ statusSupported = true
+ serviceProvider = jobScheduler
+ serviceType = Python
+ <MetaData>
+   title = Demo
+ </MetaData>
+ <DataInputs>
+  [selection]
+   Title = select the operation to be used
+   Abstract = operation to be used
+   minOccurs = 1
+   maxOccurs = 1
+   <MetaData>
+    title = Meta
+   </MetaData>
+   <LiteralData>
+    DataType = string
+    <Default>
+     UOM = meter
+    </Default>
+    <Supported>
+     UOM = meter
+    </Supported>
+   </LiteralData>
+  [jobid]
+   Title = select the job id to be used
+   Abstract = job id to be used
+   minOccurs = 1
+   maxOccurs = 1
+   <MetaData>
+    title = Meta
+   </MetaData>
+   <LiteralData>
+    DataType = string
+    <Default>
+     UOM = meter
+    </Default>
+    <Supported>
+     UOM = meter
+    </Supported>
+   </LiteralData>
+  [urls]
+   Title = multiple urls seperated by commas
+   Abstract = urls seperated by comma's, by default use two
+   minOccurs = 1
+   maxOccurs = 1
+   <MetaData>
+    title = Meta
+   </MetaData>
+   <LiteralData>
+    DataType = string
+    <Default>
+     UOM = meter
+    </Default>
+    <Supported>
+     UOM = meter
+    </Supported>
+   </LiteralData>
+ </DataInputs>
+ <DataOutputs>
+  [Result]
+   Title = Operation Service Provider
+   Abstract = A Zoo web service that calls various operations on netcdf data.
+   <MetaData>
+    title = My test
+   </MetaData>
+   <LiteralData>
+    DataType = string
+    <Default>
+     UOM = meter
+    </Default>
+    <Supported>
+     UOM = meter
+    </Supported>
+   </LiteralData>
+ </DataOutputs>
+
