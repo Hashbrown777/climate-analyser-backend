@@ -28,6 +28,9 @@ import os.path
 import os
 import string
 import random
+import rsa
+import urllib
+import base64
 
 def getFileNameFromUrl(url):
 		return url.rsplit('/',1)[1].split('?',1)[0]
@@ -105,19 +108,40 @@ def getUrls(inputUrls):
 	urls = inputUrls.split(",http")
 	return urls
 
+def jobStatus(jobid,status):
+	djangoFile = open('DjangoServer')
+	djangoAddr = djangoFile.read().strip()
+	publicfile = open('publicKey.pem')
+	pubdata = publicfile.read()
+	pubkey = rsa.PublicKey.load_pkcs1(pubdata)
+	
+	wCall = djangoAddr + '/update_computation_status?id='
+	wCall += encryptField(pubkey,jobid)
+	wCall += '&status='
+	wCall += encryptField(pubkey,status)
+	urllib.urlopen(wCall)
+
+def encryptField(pubkey, value):
+	crypto = rsa.encrypt(value,pubkey)
+	return base64.b64encode(urllib.quote_plus(crypto))
+
 def Operation(Urls,Selection,Jobid):
+	jobStatus(Jobid,'running')
 	urls = getUrls(Urls)
 	filename = outputFileName(Selection,urls,Jobid)
 	outputFile = "/var/www/cgi-bin/Thredds/outputs/" + filename
 	serverFile = open('ThreddServer')
 	serverAddr = serverFile.read().strip()
 	if len(urls) < 1:
-			return "There has to be atleast one dataset" #Use Ben's script to return fail
+		jobStatus(Jobid,'failed')
+		return
 	try:
 		if readFileExistsInThredds(outputFile):
-		        return (resultOut(filename,serverAddr)) #Use Ben's script to return success
+			jobStatus(Jobid,'successful')
+		        return
 	except:
-		return "Could not open '" + outputFile + "' for writing." #Use Ben's script to return fail
+		jobStatus(Jobid,'failed')
+		return # "Could not open '" + outputFile + "' for writing." 
        
 	filecheck(urls)
 
@@ -126,11 +150,15 @@ def Operation(Urls,Selection,Jobid):
 				getLocation(urls[1],serverAddr), outputFile)
 	if Selection == "regres":
 		regresion.runRegres(getLocation(urls[0],serverAddr),outputFile)
-	
+
+	jobStatus(Jobid,'successful')
         return (resultOut(filename,serverAddr)) #Use ben's script to send back this info
 
 def main():
-        Operation(sys.argv[1],sys.argv[2],sys.argv[3])
+	try:
+        	Operation(sys.argv[1],sys.argv[2],sys.argv[3])
+	except:
+		jobStatus(sys.argv[3],'failed')
 
 if __name__ == '__main__':
         exitCode = main()
