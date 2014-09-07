@@ -40,8 +40,8 @@ def getLocation(url,serverAddr):
 	if localFile(url):
 		return dataLink(serverAddr,getFileNameFromUrl(url),getVariables(url))	
 	else:
-		if "http" not in url:
-			url = "http" + url
+		#if "http" not in url:
+		#	url = "http" + url
 		return url
 	#return "/var/www/cgi-bin/Thredds/inputs/" + getFileNameFromUrl(url)
 
@@ -108,6 +108,9 @@ def resultOut(filename,serverAddr):
 
 def getUrls(inputUrls):
 	urls = inputUrls.split(",http")
+        for x in range(1, len(urls)):
+                urls[x] = 'http' + urls[x]
+
 	return urls
 
 def Operation(conf,inputs,outputs):
