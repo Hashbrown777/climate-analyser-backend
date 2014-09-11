@@ -77,8 +77,7 @@ def readFileExistsInThredds(name):
 def filecheck(urls):
 	for url in urls:
 		if readFileExistsInThredds(getDownloadLocation(url)) == 0:
-			if localFile(url):
-				downloadFile(url)
+			downloadFile(url)
 
 def localFile(url):
 	if not "/dodsC/" in url:	#check this
@@ -87,15 +86,17 @@ def localFile(url):
 		return 0
 
 def downloadFile(url):
-	#filePath = getDownloadLocation(url)
-	#r = requests.get(url)
-	#f = open(filePath, 'wb')
-	#for chunk in r.iter_content(chunk_size=512 * 1024): 
-	#	if chunk: # filter out keep-alive new chunks
-	#		f.write(chunk)
-	#f.close()
-	dataset = open_url(url)
-	save(dataset,getDownloadLocation(url))
+	if localFile(url):
+		filePath = getDownloadLocation(url)
+		r = requests.get(url)
+		f = open(filePath, 'wb')
+		for chunk in r.iter_content(chunk_size=512 * 1024): 
+			if chunk: # filter out keep-alive new chunks
+				f.write(chunk)
+		f.close()
+	else:
+		dataset = open_url(url)
+		save(dataset,getDownloadLocation(url))
 	return 
 
 #def resultOut(filename,serverAddr):
