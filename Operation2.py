@@ -32,6 +32,9 @@ import rsa
 import urllib
 import base64
 
+from pydap.client import open_url
+from pydap.responses.netcdf import save
+
 def getFileNameFromUrl(url):
 		return url.rsplit('/',1)[1].split('?',1)[0]
 
@@ -40,10 +43,11 @@ def getDownloadLocation(url):
 
 def getLocation(url,serverAddr):
 	if localFile(url):
-		return dataLink(serverAddr,getFileNameFromUrl(url),getVariables(url))	
+		return "/var/www/cgi-bin/Thredds/inputs/" + getFileNameFromUrl(url)
+		#return dataLink(serverAddr,getFileNameFromUrl(url),getVariables(url))	
 	else:
-		if "http" not in url:
-			url = "http" + url
+		#if "http" not in url:
+		#	url = "http" + url
 		return url
 	#return "/var/www/cgi-bin/Thredds/inputs/" + getFileNameFromUrl(url)
 
@@ -83,26 +87,28 @@ def localFile(url):
 		return 0
 
 def downloadFile(url):
-	filePath = getDownloadLocation(url)
-	r = requests.get(url)
-	f = open(filePath, 'wb')
-	for chunk in r.iter_content(chunk_size=512 * 1024): 
-		if chunk: # filter out keep-alive new chunks
-			f.write(chunk)
-	f.close()
+	#filePath = getDownloadLocation(url)
+	#r = requests.get(url)
+	#f = open(filePath, 'wb')
+	#for chunk in r.iter_content(chunk_size=512 * 1024): 
+	#	if chunk: # filter out keep-alive new chunks
+	#		f.write(chunk)
+	#f.close()
+	dataset = open_url(url)
+	save(dataset,getDownloadLocation(url))
 	return 
 
-def resultOut(filename,serverAddr):
-	outputLink = "[opendap]"
-	outputLink += (serverAddr + "/thredds/catalog/datafiles/outputs/catalog.html?dataset=climateAnalyserStorage/outputs/" + filename)
-	outputLink += "[/opendap]"
-	outputLink += "[ncfile]"
-	outputLink += (serverAddr + "/thredds/fileServer/datafiles/outputs/" + filename)
-	outputLink += "[/ncfile]"
-	outputLink += "[wms]"
-	outputLink += (serverAddr + "/thredds/wms/datafiles/outputs/" + filename + "?service=WMS&version=1.3.0&request=GetCapabilities")
-	outputLink += "[/wms]"
-	return outputLink
+#def resultOut(filename,serverAddr):
+#	outputLink = "[opendap]"
+#	outputLink += (serverAddr + "/thredds/catalog/datafiles/outputs/catalog.html?dataset=climateAnalyserStorage/outputs/" + filename)
+#	outputLink += "[/opendap]"
+#	outputLink += "[ncfile]"
+#	outputLink += (serverAddr + "/thredds/fileServer/datafiles/outputs/" + filename)
+#	outputLink += "[/ncfile]"
+#	outputLink += "[wms]"
+#	outputLink += (serverAddr + "/thredds/wms/datafiles/outputs/" + filename + "?service=WMS&version=1.3.0&request=GetCapabilities")
+#	outputLink += "[/wms]"
+#	return outputLink
 
 def getUrls(inputUrls):
 	urls = inputUrls.split(",http")
@@ -128,7 +134,8 @@ def encryptField(pubkey, value):
 def Operation(Urls,Selection,Jobid):
 	jobStatus(Jobid,'running')
 	urls = getUrls(Urls)
-	filename = outputFileName(Selection,urls,Jobid)
+	#filename = outputFileName(Selection,urls,Jobid)
+	filename = Jobid + '.nc'
 	outputFile = "/var/www/cgi-bin/Thredds/outputs/" + filename
 	serverFile = open('ThreddServer')
 	serverAddr = serverFile.read().strip()
@@ -152,7 +159,7 @@ def Operation(Urls,Selection,Jobid):
 		regresion.runRegres(getLocation(urls[0],serverAddr),outputFile)
 
 	jobStatus(Jobid,'successful')
-        return (resultOut(filename,serverAddr)) #Use ben's script to send back this info
+        return  
 
 def main():
 	try:
