@@ -42,12 +42,11 @@ def getDownloadLocation(url):
 	return "/var/www/cgi-bin/Thredds/inputs/" + getFileNameFromUrl(url)
 
 def getLocation(url,serverAddr):
+	return "/var/www/cgi-bin/Thredds/inputs/" + getFileNameFromUrl(url) #delete line when cleanup
 	if localFile(url):
 		return "/var/www/cgi-bin/Thredds/inputs/" + getFileNameFromUrl(url)
 		#return dataLink(serverAddr,getFileNameFromUrl(url),getVariables(url))	
 	else:
-		#if "http" not in url:
-		#	url = "http" + url
 		return url
 	#return "/var/www/cgi-bin/Thredds/inputs/" + getFileNameFromUrl(url)
 

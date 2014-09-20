@@ -4,6 +4,21 @@ exit 1
 fi
 RUNASUSER="sudo -u $SUDO_USER"
 
+wget ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4.3.2.tar.gz
+tar xf netcdf-4.3.2.tar.gz 
+cd netcdf-*/
+./configure
+make
+make install
+
+wget https://code.zmaw.de/attachments/download/8591/cdo-current.tar.gz
+tar xf cdo-current.tar.gz 
+cd cdo-*/
+./configure --with-netcdf=/usr/bin/
+make
+make install
+
+
 yum -y groupinstall "Development tools"
 yum -y install readline-devel
 yum -y install perl-devel
