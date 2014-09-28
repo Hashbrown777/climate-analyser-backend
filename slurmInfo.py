@@ -9,10 +9,12 @@ def callCommand(option):
 def slurmInfo(conf,inputs,outputs):
         option = inputs["option"]["value"]
 	slurmOut = ''
-        if option == 'sinfo' || option == 'sall':
-		slurmOut += callCommand('sinfo')
-	if option == 'squeue' || option == 'sall':
+        if option == 'sinfo' or option == 'sall':
+		slurmOut += callCommand('sinfo -N -l')
+	if option == 'squeue' or option == 'sall':
 		slurmOut += callCommand('squeue')
+	if option == 'snodes' or option == 'sall':
+		slurmOut += callCommand('scontrol -o show nodes')
 	outputs["Result"]["value"] = slurmOut
 	return zoo.SERVICE_SUCCEEDED
         

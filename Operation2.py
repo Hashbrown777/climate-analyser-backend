@@ -23,6 +23,7 @@
 import sys
 import requests
 import correlation
+import convolute
 import regresion
 import os.path
 import os
@@ -32,22 +33,21 @@ import rsa
 import urllib
 import base64
 
-from pydap.client import open_url
-from pydap.responses.netcdf import save
+from cdo import *
 
 def getFileNameFromUrl(url):
-		return url.rsplit('/',1)[1].split('?',1)[0]
+	return url.rsplit('/',1)[1].split('?',1)[0]
 
 def getDownloadLocation(url):
 	return "/var/www/cgi-bin/Thredds/inputs/" + getFileNameFromUrl(url)
 
-def getLocation(url,serverAddr):
+def getLocation(url):
 	return "/var/www/cgi-bin/Thredds/inputs/" + getFileNameFromUrl(url) #delete line when cleanup
-	if localFile(url):
-		return "/var/www/cgi-bin/Thredds/inputs/" + getFileNameFromUrl(url)
+	#if localFile(url):
+	#	return "/var/www/cgi-bin/Thredds/inputs/" + getFileNameFromUrl(url)
 		#return dataLink(serverAddr,getFileNameFromUrl(url),getVariables(url))	
-	else:
-		return url
+	#else:
+	#	return url
 	#return "/var/www/cgi-bin/Thredds/inputs/" + getFileNameFromUrl(url)
 
 def getVariables(url):
@@ -56,19 +56,9 @@ def getVariables(url):
 	else:
 		return ""
 
-def dataLink(serverAddr,filename,variables):
-	return (serverAddr + "/thredds/dodsC/datafiles/inputs/" + filename + variables)
-
-def outputFileName(operation,urls,jobid):
-	name = str(operation)
-	for url in urls:
-		name += '_' + getFileNameFromUrl(url).strip('.nc')
-	if any('?' in url for url in urls):
-		name += (jobid)
-		if readFileExistsInThredds("/var/www/cgi-bin/Thredds/outputs/"+name+'.nc'):
-			return outputFileName
-	name += '.nc'
-	return name
+def dataLink(serverAddr,url):
+	return (serverAddr + "/thredds/dodsC/datafiles/inputs/" + 
+					getFileNameFromUrl(url) + getVariables(url))
 
 def readFileExistsInThredds(name):
 	return os.path.isfile(name)
@@ -94,8 +84,9 @@ def downloadFile(url):
 				f.write(chunk)
 		f.close()
 	else:
-		dataset = open_url(url)
-		save(dataset,getDownloadLocation(url))
+		cdo = Cdo()
+		print url.split('?',1)[0]
+    		cdo.copy(input = url.split('?',1)[0], output = getDownloadLocation(url))
 	return 
 
 #def resultOut(filename,serverAddr):
@@ -112,6 +103,8 @@ def downloadFile(url):
 
 def getUrls(inputUrls):
 	urls = inputUrls.split(",http")
+        for x in range(1, len(urls)):
+                urls[x] = 'http' + urls[x]
 	return urls
 
 def jobStatus(jobid,status):
@@ -131,41 +124,48 @@ def encryptField(pubkey, value):
 	crypto = rsa.encrypt(value,pubkey)
 	return base64.b64encode(urllib.quote_plus(crypto))
 
+def getServerAddr():
+	serverFile = open('ThreddServer')
+	return serverFile.read().strip()
+
 def Operation(Urls,Selection,Jobid):
 	jobStatus(Jobid,'running')
 	urls = getUrls(Urls)
 	#filename = outputFileName(Selection,urls,Jobid)
 	filename = Jobid + '.nc'
 	outputFile = "/var/www/cgi-bin/Thredds/outputs/" + filename
-	serverFile = open('ThreddServer')
-	serverAddr = serverFile.read().strip()
+
+	serverAddr = getServerAddr()
 	if len(urls) < 1:
-		jobStatus(Jobid,'failed')
+		jobStatus(Jobid,'3')
 		return
 	try:
 		if readFileExistsInThredds(outputFile):
-			jobStatus(Jobid,'successful')
+			jobStatus(Jobid,'2')
 		        return
 	except:
-		jobStatus(Jobid,'failed')
+		jobStatus(Jobid,'4')
 		return # "Could not open '" + outputFile + "' for writing." 
        
 	filecheck(urls)
-
+	
 	if Selection == "correlate":
-		result = correlation.runCorrelate(getLocation(urls[0],serverAddr),
-				getLocation(urls[1],serverAddr), outputFile)
+		result = correlation.runCorrelate(getLocation(urls[0]),
+				getLocation(urls[1]), outputFile)
+	if Selection == "convolute":
+		result = convolute.runConvolute(getLocation(urls[0]),
+				getLocation(urls[1]), outputFile)
 	if Selection == "regres":
-		regresion.runRegres(getLocation(urls[0],serverAddr),outputFile)
+		regresion.runRegres(dataLink(serverAddr,urls[0]),outputFile)
 
-	jobStatus(Jobid,'successful')
+	jobStatus(Jobid,'2')
         return  
 
 def main():
-	try:
-        	Operation(sys.argv[1],sys.argv[2],sys.argv[3])
-	except:
-		jobStatus(sys.argv[3],'failed')
+	#try:
+        Operation(sys.argv[1],sys.argv[2],sys.argv[3])
+	#except:
+	#	jobStatus(sys.argv[3],'7')
 
 if __name__ == '__main__':
         exitCode = main()

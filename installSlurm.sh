@@ -14,7 +14,7 @@ make install
 wget https://code.zmaw.de/attachments/download/8591/cdo-current.tar.gz
 tar xf cdo-current.tar.gz 
 cd cdo-*/
-./configure --with-netcdf=/usr/bin/
+./configure --with-netcdf=/usr --with-hdf5=/usr
 make
 make install
 

@@ -67,7 +67,22 @@
    Title = Operation Service Provider
    Abstract = A Zoo web service that calls various operations on netcdf data.
    <MetaData>
-    title = My test
+    title = JobSchedule
+   </MetaData>
+   <LiteralData>
+    DataType = string
+    <Default>
+     UOM = meter
+    </Default>
+    <Supported>
+     UOM = meter
+    </Supported>
+   </LiteralData>
+  [Status]
+   Title = JobStatus
+   Abstract = The original JobStatus
+   <MetaData>
+    title = JobStatus
    </MetaData>
    <LiteralData>
     DataType = string
