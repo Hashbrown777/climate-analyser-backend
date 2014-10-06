@@ -1,0 +1,46 @@
+[slurmInfo]
+ Title = Return info on slurm.
+ Abstract = return slurm data.
+ processVersion = 2
+ storeSupported = true
+ statusSupported = true
+ serviceProvider = slurmInfo
+ serviceType = Python
+ <MetaData>
+   title = Demo
+ </MetaData>
+ <DataInputs>
+  [option]
+   Title = select the operation to be used
+   Abstract = operation to be used
+   minOccurs = 1
+   maxOccurs = 1
+   <MetaData>
+    title = Meta
+   </MetaData>
+   <LiteralData>
+    DataType = string
+    <Default>
+     UOM = meter
+    </Default>
+    <Supported>
+     UOM = meter
+    </Supported>
+   </LiteralData>
+  [Result]
+   Title = SlurmInfo
+   Abstract = Slurm info
+   <MetaData>
+    title = My test
+   </MetaData>
+   <LiteralData>
+    DataType = string
+    <Default>
+     UOM = meter
+    </Default>
+    <Supported>
+     UOM = meter
+    </Supported>
+   </LiteralData>
+ </DataOutputs>
+

@@ -1,0 +1,48 @@
+[ChangeDjango]
+ Title = Set a new Thredds server
+ Abstract = Set a new Thredds server
+ processVersion = 2
+ storeSupported = true
+ statusSupported = true
+ serviceProvider = ChangeDjango
+ serviceType = Python
+ <MetaData>
+   title = Demo
+ </MetaData>
+ <DataInputs>
+  [url]
+   Title = A single url such as http://115.146.84.143:8080
+   Abstract = Url to the Django server
+   minOccurs = 1
+   maxOccurs = 1
+   <MetaData>
+    title = Meta
+   </MetaData>
+   <LiteralData>
+    DataType = string
+    <Default>
+     UOM = meter
+    </Default>
+    <Supported>
+     UOM = meter
+    </Supported>
+   </LiteralData>
+ </DataInputs>
+ <DataOutputs>
+  [Result]
+   Title = Operation Service Provider
+   Abstract = A Zoo web service that calls various operations on netcdf data.
+   <MetaData>
+    title = My test
+   </MetaData>
+   <LiteralData>
+    DataType = string
+    <Default>
+     UOM = meter
+    </Default>
+    <Supported>
+     UOM = meter
+    </Supported>
+   </LiteralData>
+ </DataOutputs>
+
